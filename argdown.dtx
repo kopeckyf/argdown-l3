@@ -9,41 +9,38 @@
 \keepsilent
 \askforoverwritefalse
 \preamble
-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
-Argdown parser for LaTeX.
+An argdown parser for LaTeX
 
 Copyright (C) 2022 by Felix Kopecky
 
-This work consists of the file  argdown.dtx
-          and the derived file  argdown.pdf.
+This work consists of the file argdown.dtx 
+         and the derived files argdown.sty,
+                               argdown.pdf.
 
 It may be distributed and/or modified under the conditions of the
 LaTeX Project Public License (LPPL), either version 1.3c of this
 license or (at your option) any later version. The latest version
 of this license is at <http://www.latex-project.org/lppl.txt>.
 
-This work is ``maintained'' (per LPPL maintenance status) by
-Felix Kopecky <f.kopecky@kit.edu>.
+This work is ``maintained'' (per LPPL maintenance status) by Felix Kopecky.
 
 The development version can be found at
-
 https://github.com/kopeckyf/argdown-l3
-
 for those who are interested. Pull requests are welcome.
 
-Please report any bugs or feature requests to
-
+Please report any bugs or feature requests to 
 https://github.com/kopeckyf/argdown-l3/issues
 
-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 \endpreamble
 \declarepreamble\minimalpreamble
 \endpreamble
 \postamble
 \endpostamble
 \usedir{tex/latex/argdown}
-%\generate{\file{\jobname.sty}{\from{\jobname.dtx}{package}}}
+\generate{\file{\jobname.sty}{\from{\jobname.dtx}{package}}}
 %</install>
 %<install>\endbatchfile
 %<*internal>
@@ -58,8 +55,23 @@ https://github.com/kopeckyf/argdown-l3/issues
 \usepackage{argdown}
 \usepackage[british]{babel}
 \usepackage{enumitem}
-\setlist[description]{font=\normalfont}
+  \setlist[description]{font=\normalfont}
+\usepackage{fontspec}
+  \setmainfont{TeX Gyre Pagella}
+  \setmonofont{TeX Gyre Cursor}
 \usepackage{tcolorbox}
+  \newtcolorbox{hint}{sharp corners, colframe=blue!20, colback=blue!5}
+
+% Put things in the marginpar, similar to l3docs `function` environemnt.
+\NewDocumentCommand{\ArgdownDocumentationMarginpar}{m}
+  {
+    \marginpar{%
+      \raggedleft\ttfamily%
+      \begin{tabular}{@{} l @{}}
+        \toprule
+        #1\\\bottomrule
+      \end{tabular}}
+  }
 \begin{document}
 \DocInput{\jobname.dtx}
 \end{document}
@@ -68,68 +80,136 @@ https://github.com/kopeckyf/argdown-l3/issues
 % \title{An \pkg{argdown} parser for \LaTeX}
 % \author{Felix Kopecky\thanks{Please submit bug reports and feature requests to
 % 		\protect\url{https://github.com/kopeckyf/argdown-l3/issues}.
-% 	}}
-% \date{development version from \today}
+% 	 }}
+% \date{Development version from \today}
 % \maketitle
 % \frenchspacing
 % \begin{documentation}
-% \noindent Argdown (\url{https://argdown.org/}) provides a syntax to visualise reconstructions of arguments. This package contains a parser for the Argdown syntax in \LaTeX. Argdown code can be input directly into \LaTeX\ documents using it.
-% \begin{tcolorbox}
-%    This package can parse atomic Argdown objects, such as single statements and premise-conclusion structures. The parser does not support visualisation of relations between these objects, though.
-%\end{tcolorbox}
-% \section{User guide}
-% \subsection{Initialisation}
-% The package is loaded in a \LaTeX\ document with \cs{usepackage\{argdown\}}. The package is loaded without any options, but settings can be customised via \cs{argdownsettings}, explained below. \pkg{argdown} depends on only core packages \pkg{xparse} and \pkg{amsthm}.
-% \subsection{Argdown input}
-% The command \cmd{\argdown} facilitates parsing of Argdown syntax, as defined at \url{https://argdown.org/syntax/}.
+% \noindent This package contains a \LaTeX\ parser for the core 
+% \href{https://argdown.org/}{Argdown} syntax. With this package, reconstructions
+% of single arguments and statements that have been typed in Argdown documents 
+% can be easily transferred to \LaTeX\ documents.
+% 
+% \begin{hint}
+% While this package can parse core Argdown objects, such as single statements  
+% and premise-conclusion structures, it does not support more complex Argdown
+% objects, such as argument maps and dialectical relations between arguments.
+% \end{hint}
+% 
+% \section{How \textit{\&} where to use this package}
+% The package is loaded in a \LaTeX\ document with \cs{usepackage\{argdown\}}. 
+% The package is loaded without any options, but settings can be customised via 
+% \cs{argdownsetup}, explained below. It requires only core packages 
+% \pkg{xparse} and \pkg{amsthm}.
+%
+% \begin{hint}
+% As \pkg{argdown} relies on \cs{obeylines}, it can only be used in places 
+% where \cs{obeylines} works. Importantly, this \textit{exludes} footnotes and
+% \cs{fbox}. See \S\ref{sec:examples} for applications of \pkg{argdown} in
+% example environments.
+% \end{hint}
+% 
 % \begin{function}{\argdown}
 %   \begin{syntax}
 %     \cs{argdown} \oarg{options} \marg{input in Argdown format}
 %   \end{syntax}
-% The \oarg{options} are local settings applied to the current \cs{argdown} call only. Their usage is exactly the same as in \cs{argdownsettings}, explained below.
-%
+% The \marg{input in Argdown format} allows any features from the 
+% \href{https://argdown.org/syntax/}{Argdown syntax} within the current
+% coverage of this package, described in \S\ref{sec:coverage}.
+% The \oarg{options} are local settings applied to the current \cs{argdown} 
+% call only. Identical options can be used globally for \cs{argdownsetup}.
+% \bigskip\\
 % \begin{minipage}[c]{.5\linewidth}
 % \begin{verbatim}
 % \argdown{
-% (1) Socrates is a human.
-% (2) All humans are mortal.
-% --
-% Modus ponens
-% --
-% (3) Socrates is mortal.
+%   (1) Socrates is a human.
+%   (2) All humans are mortal.
+%   --
+%   Modus ponens
+%   --
+%   (3) Socrates is mortal.
 % }
 % \end{verbatim}
 % \end{minipage}%
 % \begin{minipage}[c]{.5\linewidth}
-% \include{argdownexample.tex}
-% \end{minipage}%
+% \small
+% \argdown{
+%   (1) Socrates is a human.
+%   (2) All humans are mortal.
+%   --
+%   Modus ponens
+%   --
+%   (3) Socrates is mortal.
+% }
+% \end{minipage}
+% \end{function}
+% 
+% \begin{function}{\argdownsetup}
+%    \begin{syntax}
+%      \cs{argdownsetup} \marg{options}
+%    \end{syntax}
+% Set \marg{options} for Argdown globally, that is, for every \cs{argdown} 
+% instance following the setting in the current scope. Please see 
+% \S\ref{sec:options} for a full list of options.
 % \end{function}
 %
-% \begin{function}{\argdownsettings}
-%    \begin{syntax}
-%      \cs{argdownsettings} \marg{options}
-%    \end{syntax}
-% Set \marg{options} for Argdown globally, that is, for every \cs{argdown} instance following the setting in the current scope. Scopes can be global or local. They are local if they are called in a \LaTeX\ group or environment, or mid-document.
+% \section{Features}\label{sec:features}
+% \subsection{Argdown syntax coverage}\label{sec:coverage}
+% Elements in argdown syntax are separated by a line break: writing \verb+(1)+
+% at the start of a line will generate a new premise, but placing it elsewhere
+% will not. 
+% \subsubsection{Statements}
+% \ArgdownDocumentationMarginpar{\lbrack Statements\rbrack}
+% \argdown[leftmargin=0pt]{[Uniqueness thesis]} Given a body of evidence,
 %
-% The options are as follows:
+% \subsubsection{Premise-conclusion structures}
+% \ArgdownDocumentationMarginpar{<Argument title>\\(1) Premise}
+% \textit{Argument titles}
+% \textit{Premises, rules of inferences and conclusions}
+% \textit{Inference rules}
+% 
+% \subsection{Descriptions \textit{\&} localisation}
+% \subsection{Labelling \textit{\&} referencing} 
+%
+% \subsection{List of all options}\label{sec:options}
 % \begin{description}[style=nextline]
-% \item[|leftmargin =| \meta{dimension}\hfill (initially \cs{leftmargin})] Space between the left margin of the page and the \cs{argdown} block.
-% \item[|rightmargin =| \meta{dimension}\hfill (initially \cs{rightmargin})] Space between the right margin of the page and the \cs{argdown} block.
-% \item[|labelwidth =| \meta{dimension}\hfill (initially \cs{labelwidth})] Space reserved for the label of statements (premises and conclusions).
-% \item[|labelsep =| \meta{dimension}\hfill (initially \cs{labelsep})] Space between label of statements and its content.
-% \item[|topsep =| \meta{dimension}\hfill (initially |0.5|\cs{topsep})] Vertical space before and after an object (such as an argument or a statement).
-% \item[|roisep =| \meta{dimension}\hfill (initially |0.5|\cs{topsep})] Vertical space before and after the inference rule.
-% \item[|itemsep =| \meta{dimension}\hfill (initially \cs{itemsep})] Vertical space between subsequent premises and conclusions of an argument reconstruction.
-% \item[|descriptions =| \meta{boolean}\hfill (initially |false|)] Whether or not to print descriptors for statements (such as “premise” and “conclusion”). See below for the locale options.
-% \item[|title~font =| \meta{font settings}\hfill (initially \cs{itshape})] Font of the titles of arguments and statements.
-% \item[|locale/argument =| \meta{string}\hfill (initially |Argument|)] The descriptor of argument objects.
-% \item[|locale/premise =| \meta{string}\hfill (initially |Premise|)] The descriptor of premise objects.
-% \item[|locale/conclusion =| \meta{string}\hfill (initially |Conclusion|)] The descriptor of conclusion objects.
-% \item[|locale/intermediateconclusion =| \meta{string}\hfill (initially |Intermediate Conclusion|)] The descriptor of intermediate conclusion objects.
+% \item[|leftmargin =| \meta{dimension}\hfill (initially \cs{leftmargin})] 
+% Space between the left margin of the page and the \cs{argdown} block.
+% \item[|rightmargin =| \meta{dimension}\hfill (initially \cs{rightmargin})] 
+% Space between the right margin of the page and the \cs{argdown} block.
+% \item[|labelwidth =| \meta{dimension}\hfill (initially \cs{labelwidth})] 
+% Space reserved for the label of statements (premises and conclusions).
+% \item[|labelsep =| \meta{dimension}\hfill (initially \cs{labelsep})] Space 
+% between label of statements and its content.
+% \item[|topsep =| \meta{dimension}\hfill (initially |0.5|\cs{topsep})] 
+% Vertical space before and after an object (such as an argument or a statement).
+% \item[|roisep =| \meta{dimension}\hfill (initially |0.5|\cs{topsep})] 
+% Vertical space before and after the inference rule.
+% \item[|itemsep =| \meta{dimension}\hfill (initially \cs{itemsep})] Vertical 
+% space between subsequent premises and conclusions of an argument 
+% reconstruction.
+% \item[|descriptions =| \meta{boolean}\hfill (initially |false|)] Whether or 
+% not to print descriptors for statements (such as “premise” and “conclusion”). 
+% See below for the locale options.
+% \item[|title~font =| \meta{font settings}\hfill (initially \cs{itshape})] 
+% Font of the titles of arguments and statements.
+% \item[|locale/argument =| \meta{string}\hfill (initially |Argument|)] The 
+% descriptor of argument objects.
+% \item[|locale/premise =| \meta{string}\hfill (initially |Premise|)] The 
+% descriptor of premise objects.
+% \item[|locale/conclusion =| \meta{string}\hfill (initially |Conclusion|)] The 
+% descriptor of conclusion objects.
+% \item[|locale/intermediateconclusion =| \meta{string} (init. 
+% |Intermediate| |Conclusion|)] The descriptor of intermediate conclusion 
+% objects.
 % \end{description}
 %
+% \section{Examples}\label{sec:examples}
+% 
+% \subsection{Use in \pkg{beamer} frames}
 %
-% \end{function}
+% \subsection{Use in \pkg{tcolorbox} boxes}
+%
 % \end{documentation}
 % \newpage
 %
@@ -143,47 +223,38 @@ https://github.com/kopeckyf/argdown-l3/issues
 %    \end{macrocode}
 %    \begin{macrocode}
 \RequirePackage{xparse, amsthm}
-\ProvidesExplPackage {argdown} {2022-01-06} {0.0} {Argdown parser for LaTeX}
+\ProvidesExplPackage {argdown} {2022-10-20} {alpha} {Argdown parser for LaTeX}
 %    \end{macrocode}
 
 %    \begin{macro}{\argdown}
 % The command to call the parser in the document.
 %    \begin{macrocode}
-\NewDocumentCommand{\argdown}{O{} +v}
+\NewDocumentCommand{\argdown}{O{}}
   {%
     \c_group_begin_token
     \keys_set:nn { argdown } { #1 }
-    \__argdown_begin_outer_list:
-    \argdown_parse:n { #2 }
-    \__argdown_end_list:
-    \c_group_end_token
+    \obeylines
+    \argdown_init:n
   }
 %    \end{macrocode}
 %    \end{macro}
 
-%    \begin{macro}{\argdownsettings}
+%    \begin{macro}{\argdownsetup}
 % Customise settings globally.
 %    \begin{macrocode}
-\NewDocumentCommand{\argdownsettings}{m}{ \keys_set:nn { argdown } { #1 } }
+\NewDocumentCommand{\argdownsetup}{m}{ \keys_set:nn { argdown } { #1 } }
 %    \end{macrocode}
 %    \end{macro}
 
 % \begin{variable}[int]{
-%    \seq_set_split:Nnn {Nxn},
-%    \l__argdown_lines_seq,
-%    \l__argdown_current_position_int,
-%    \l__argdown_statement_id_tl,
-%    \l__argdown_scanned_tl,
-%    \l__argdown_statement_name_tl,
-%    \l__argdown_in_list_bool,
-%    \l__argdown_in_theorem_bool,
-%    \l__argdown_after_inference_bool,
-%    \l__argdown_print_descriptions_bool,
-%    \l__argdown_localisation_prop
+%    \l__argdown_*_seq,
+%    \l__argdown_*_int,
+%    \l__argdown_*_tl,
+%    \l__argdown_*_bool,
+%    \l__argdown_*_prop
 %  }
-%  Variants and internal variables.
+%  Internal variables.
 %    \begin{macrocode}
-\cs_generate_variant:Nn \seq_set_split:Nnn {Nxn}
 \seq_new:N \l__argdown_lines_seq
 \int_new:N \l__argdown_current_position_int
 \tl_new:N \l__argdown_statement_id_tl
@@ -209,23 +280,31 @@ https://github.com/kopeckyf/argdown-l3/issues
     labelsep .dim_set:N    = \l__argdown_list_labelsep_dim,
     labelsep .initial:n    = {\labelsep},
     topsep .dim_set:N      = \l__argdown_list_topsep_dim,
-    topsep .initial:n      = {.5\topsep},
+    topsep .initial:n      = {0pt},
     roisep .dim_set:N      = \l__argdown_list_roisep_dim,
     roisep .initial:n      = {.5\topsep},
     itemsep .dim_set:N     = \l__argdown_list_itemsep_dim,
     itemsep .initial:n     = {\itemsep},
     descriptions .bool_set:N = \l__argdown_print_descriptions_bool,
-    descriptions .initial:n = {false},
-    title~font .code:n = {\cs_set:Nn \__argdown_title_font: {#1}},
-    title~font .initial:n = {\itshape},
-    locale / argument .prop_put:N = \l__argdown_localisation_prop,
-    locale / argument .initial:n = {Argument},
-    locale / premise .prop_put:N = \l__argdown_localisation_prop,
-    locale / premise .initial:n = {Premise},
-    locale / conclusion .prop_put:N = \l__argdown_localisation_prop,
-    locale / conclusion .initial:n = {Conclusion},
-    locale / intermediateconclusion .prop_put:N = \l__argdown_localisation_prop,
-    locale / intermediateconclusion .initial:n = {Intermediate~Conclusion},
+    descriptions .initial:n  = {false},
+    title~font .code:n       = {\cs_set:Nn \__argdown_title_font: {#1}},
+    title~font .initial:n    = {\itshape},
+    locale / argument .prop_put:N 
+    	= \l__argdown_localisation_prop,
+    locale / argument .initial:n 
+    	= {Argument},
+    locale / premise .prop_put:N 
+    	= \l__argdown_localisation_prop,
+    locale / premise .initial:n 
+    	= {Premise},
+    locale / conclusion .prop_put:N 
+    	= \l__argdown_localisation_prop,
+    locale / conclusion .initial:n 
+    	= {Conclusion},
+    locale / intermediateconclusion .prop_put:N 
+    	= \l__argdown_localisation_prop,
+    locale / intermediateconclusion .initial:n 
+    	= {Intermediate~Conclusion},
   }
 %    \end{macrocode}
 
@@ -233,14 +312,14 @@ https://github.com/kopeckyf/argdown-l3/issues
 % The theorem style to store arguments.
 %    \begin{macrocode}
 \newtheoremstyle{argdown@rgumentstyle}%
-                {0pt}%
-                {0pt}%
-                {\normalfont}%
-                {}%
-                {\__argdown_title_font:}%
-                {:}%
-                {.5em}%
-                {}%
+                {}% Space above
+                {}% Space below
+                {\normalfont}% Body font
+                {}% Indent amount
+                {\__argdown_title_font:}% Argument title font
+                {:}% Punctuation after argument head
+                {.5em}% Space after argument title
+                {}% Head spec
 
 \theoremstyle{argdown@rgumentstyle}
 \newtheorem{argdown@rgument}
@@ -255,12 +334,25 @@ https://github.com/kopeckyf/argdown-l3/issues
 %    \end{macrocode}
 %    \end{macro}
 
+%    \begin{macro}{\argdown_init:n}
+% Initialise parsing, and ensure grouping for \cs{obeylines}.
+%    \begin{macrocode}
+\cs_new:Npn \argdown_init:n #1
+  {
+    \__argdown_begin_outer_list:
+    \argdown_parse:n { #1 }
+    \__argdown_end_list:
+    \c_group_end_token
+  }
+%    \end{macrocode}
+%    \end{macro}
+
 %    \begin{macro}{\argdown_parse:n}
 % Execute the parser.
 %    \begin{macrocode}
 \cs_new:Npn \argdown_parse:n #1
-  {
-    \seq_set_split:Nxn \l__argdown_lines_seq {\iow_char:N \^^M} {#1}
+  { 
+    \regex_split:nnN { \r } { #1 } \l__argdown_lines_seq
     \seq_remove_all:Nn \l__argdown_lines_seq {}
     \seq_clear_new:N \l__argdown_position_of_boundaries_seq
     \int_zero:N \l__argdown_current_position_int
@@ -293,7 +385,10 @@ https://github.com/kopeckyf/argdown-l3/issues
       {
         \int_gincr:N \l__argdown_current_position_int
         \tl_gset_rescan:Nnn \l__argdown_scanned_tl {} { ##1 }
-        \exp_args:Nx \token_case_meaning:NnF {\tl_head:N \l__argdown_scanned_tl }
+        \exp_args:Nx \token_case_meaning:NnF 
+          { 
+            \tl_head:N \l__argdown_scanned_tl 
+          }
           {
             < {  \__argdown_parse_titles:N \l__argdown_scanned_tl  }
             ( {  \__argdown_parse_statements:N \l__argdown_scanned_tl  }
@@ -335,11 +430,10 @@ https://github.com/kopeckyf/argdown-l3/issues
         \__argdown_end_theorem:
         \bool_set_false:N \l__argdown_in_theorem_bool
       }
-    \item[] \__argdown_begin_theorem:
-    \bool_set_true:N \l__argdown_in_theorem_bool
     \tl_remove_once:Nn #1 { < }
     \tl_remove_once:Nn #1 { > }
-    \tl_use:N #1
+    \item[] \mode_leave_vertical: \__argdown_begin_theorem:n { #1 }
+    \bool_set_true:N \l__argdown_in_theorem_bool
   }
 %    \end{macrocode}
 %    \end{macro}
@@ -366,6 +460,7 @@ https://github.com/kopeckyf/argdown-l3/issues
         \bool_set_true:N \l__argdown_in_list_bool
       }
     \item[(\tl_use:N \l__argdown_statement_id_tl)]
+    \def\@currentlabel{(\tl_use:N \l__argdown_statement_id_tl)}
     \bool_if:NT \l__argdown_print_descriptions_bool
       {
         \bool_if:NTF \l__argdown_after_inference_bool
@@ -510,11 +605,14 @@ https://github.com/kopeckyf/argdown-l3/issues
 %    \begin{macro}[int]{\__argdown_end_list:, }
 %    \begin{macrocode}
 \cs_new:Nn \__argdown_end_list: { \end{list} }
-\cs_new:Nn \__argdown_begin_theorem: { \begin{argdown@rgument} }
+\cs_new:Npn \__argdown_begin_theorem:n #1 { \begin{argdown@rgument}[#1] }
 \cs_new:Nn \__argdown_end_theorem: { \end{argdown@rgument} }
 \cs_new:Nn \__argdown_begin_singleton: { \item [] \begin{argdownst@tement} }
 \cs_new:Nn \__argdown_end_singleton:  { \end{argdownst@tement} }
-\cs_new:Npn \__argdown_inference_rule: { \vskip-.5\baselineskip\noindent\hrulefill\par }
+\cs_new:Nn \__argdown_inference_rule: 
+  { 
+    \vskip-.5\baselineskip\noindent\hrulefill\par 
+  }
 %    \end{macrocode}
 %    \end{macro}
 

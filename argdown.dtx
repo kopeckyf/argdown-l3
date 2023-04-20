@@ -16,7 +16,7 @@ An argdown parser for LaTeX
 Copyright (C) 2022 by Felix Kopecky
 
 This work consists of the file argdown.dtx 
-         and the derived files argdown.sty,
+         and the derived files argdown.sty and
                                argdown.pdf.
 
 It may be distributed and/or modified under the conditions of the
@@ -57,10 +57,19 @@ https://github.com/kopeckyf/argdown-l3/issues
 \usepackage{enumitem}
   \setlist[description]{font=\normalfont}
 \usepackage{fontspec}
+\usepackage{unicode-math}
   \setmainfont{TeX Gyre Pagella}
   \setmonofont{TeX Gyre Cursor}
+  \setmathfont{TeX Gyre Pagella Math}
 \usepackage{tcolorbox}
+  \tcbuselibrary{listings}
   \newtcolorbox{hint}{sharp corners, colframe=blue!20, colback=blue!5}
+  \newtcblisting[auto counter]{codeexample}[1]
+    {%
+      sharp corners, 
+      title={Code example \thetcbcounter: #1},
+      listing options={style=tcblatex, keywordstyle=\ttfamily},
+    }
 
 % Put things in the marginpar, similar to l3docs `function` environemnt.
 \NewDocumentCommand{\ArgdownDocumentationMarginpar}{m}
@@ -103,8 +112,11 @@ https://github.com/kopeckyf/argdown-l3/issues
 % \pkg{xparse} and \pkg{amsthm}.
 %
 % \begin{hint}
-% As \pkg{argdown} relies on \cs{obeylines}, it can only be used in places 
-% where \cs{obeylines} works. Importantly, this \textit{exludes} footnotes and
+% Line breaks in the input do not have a special meaning in \LaTeX\ given its
+% standard configuration. As \pkg{argdown} assigns meaning to line breaks
+% (separation of items), it is necessary to configure \LaTeX\ to obey line 
+% breaks. This is possible with \cs{obeylines}, but \cs{obeylines} does not work 
+% in all surroundings. Examples where it does not work are footnotes or 
 % \cs{fbox}. See \S\ref{sec:examples} for applications of \pkg{argdown} in
 % example environments.
 % \end{hint}
@@ -118,30 +130,23 @@ https://github.com/kopeckyf/argdown-l3/issues
 % coverage of this package, described in \S\ref{sec:coverage}.
 % The \oarg{options} are local settings applied to the current \cs{argdown} 
 % call only. Identical options can be used globally for \cs{argdownsetup}.
-% \bigskip\\
-% \begin{minipage}[c]{.5\linewidth}
-% \begin{verbatim}
-% \argdown{
-%   (1) Socrates is a human.
-%   (2) All humans are mortal.
-%   --
-%   Modus ponens
-%   --
-%   (3) Socrates is mortal.
-% }
-% \end{verbatim}
-% \end{minipage}%
-% \begin{minipage}[c]{.5\linewidth}
-% \small
-% \argdown{
-%   (1) Socrates is a human.
-%   (2) All humans are mortal.
-%   --
-%   Modus ponens
-%   --
-%   (3) Socrates is mortal.
-% }
-% \end{minipage}
+% 
+% \iffalse
+%<*example>
+% \fi
+\begin{codeexample}{Basic usage}
+\argdown[leftmargin=0pt]{
+   (1) If Felix has apple crumble, he has a great day.
+   (2) If Felix has a great day, he is motivated to work on the argdown parser.
+   --
+   $ (x\implies y) \land (y\implies z) \implies (x\implies z)$
+   --
+   (3) If Felix has apple crumble, he is motivated to work on the argdown parser.
+}
+\end{codeexample}
+% \iffalse
+%</example>
+% \fi
 % \end{function}
 % 
 % \begin{function}{\argdownsetup}
@@ -159,8 +164,16 @@ https://github.com/kopeckyf/argdown-l3/issues
 % at the start of a line will generate a new premise, but placing it elsewhere
 % will not. 
 % \subsubsection{Statements}
-% \ArgdownDocumentationMarginpar{\lbrack Statements\rbrack}
-% \argdown[leftmargin=0pt]{[Uniqueness thesis]} Given a body of evidence,
+% \ArgdownDocumentationMarginpar{$\lbrack$ Statements$\rbrack$}
+% \iffalse
+%<*example>
+% \fi
+\begin{codeexample}{Theses: Usage for propositions, single theses, etc.}
+\argdown[leftmargin=0pt]{[Uniqueness thesis] If a body of evidence justifies belief in one proposition, it does not justify belief in contrary propositions.} 
+\end{codeexample}
+% \iffalse
+%</example>
+% \fi
 %
 % \subsubsection{Premise-conclusion structures}
 % \ArgdownDocumentationMarginpar{<Argument title>\\(1) Premise}
@@ -312,8 +325,8 @@ https://github.com/kopeckyf/argdown-l3/issues
 % The theorem style to store arguments.
 %    \begin{macrocode}
 \newtheoremstyle{argdown@rgumentstyle}%
-                {}% Space above
-                {}% Space below
+                {0.5\baselineskip plus 0.2\baselineskip}% Space above
+                {0.5\baselineskip plus 0.2\baselineskip}% Space below
                 {\normalfont}% Body font
                 {}% Indent amount
                 {\__argdown_title_font:}% Argument title font
@@ -339,9 +352,7 @@ https://github.com/kopeckyf/argdown-l3/issues
 %    \begin{macrocode}
 \cs_new:Npn \argdown_init:n #1
   {
-    \__argdown_begin_outer_list:
     \argdown_parse:n { #1 }
-    \__argdown_end_list:
     \c_group_end_token
   }
 %    \end{macrocode}
@@ -432,7 +443,8 @@ https://github.com/kopeckyf/argdown-l3/issues
       }
     \tl_remove_once:Nn #1 { < }
     \tl_remove_once:Nn #1 { > }
-    \item[] \mode_leave_vertical: \__argdown_begin_theorem:n { #1 }
+    \mode_leave_vertical: 
+    \__argdown_begin_theorem:n { #1 }
     \bool_set_true:N \l__argdown_in_theorem_bool
   }
 %    \end{macrocode}
@@ -455,7 +467,6 @@ https://github.com/kopeckyf/argdown-l3/issues
       }
     \bool_if:NF \l__argdown_in_list_bool
       {
-        \item[]
         \__argdown_begin_list:
         \bool_set_true:N \l__argdown_in_list_bool
       }
@@ -561,27 +572,6 @@ https://github.com/kopeckyf/argdown-l3/issues
 %    \end{macrocode}
 %    \end{macro}
 
-%    \begin{macro}[int]{\__argdown_begin_outer_list:}
-% The outer list for every \cmd{argdown} environment.
-%    \begin{macrocode}
-\cs_new:Nn \__argdown_begin_outer_list:
-  {%
-    \begin{list}
-    {}
-    {
-      \leftmargin=\dim_use:N \l__argdown_list_leftmargin_dim
-      \rightmargin=\dim_use:N \l__argdown_list_rightmargin_dim
-      \labelwidth=0pt
-      \labelsep=0pt
-      \itemindent=0pt
-      \topsep=\dim_use:N \l__argdown_list_topsep_dim
-      \itemsep=0pt
-      \partopsep=0pt
-    }
-  }
-%    \end{macrocode}
-%    \end{macro}
-
 %    \begin{macro}[int]{\__argdown_begin_list:}
 % Inner list for premise-conclusion structures.
 %    \begin{macrocode}
@@ -594,7 +584,7 @@ https://github.com/kopeckyf/argdown-l3/issues
       \rightmargin=0pt
       \labelwidth=\dim_use:N \l__argdown_list_labelwidth_dim
       \labelsep=\dim_use:N \l__argdown_list_labelsep_dim
-      \topsep=\dim_use:N \l__argdown_list_topsep_dim
+      \topsep=0pt
       \itemsep=\dim_use:N \l__argdown_list_itemsep_dim
       \partopsep=0pt
     }
@@ -605,9 +595,13 @@ https://github.com/kopeckyf/argdown-l3/issues
 %    \begin{macro}[int]{\__argdown_end_list:, }
 %    \begin{macrocode}
 \cs_new:Nn \__argdown_end_list: { \end{list} }
-\cs_new:Npn \__argdown_begin_theorem:n #1 { \begin{argdown@rgument}[#1] }
+\cs_new:Npn \__argdown_begin_theorem:n #1 
+  { 
+    \begin{argdown@rgument}[#1] 
+    \mode_leave_vertical:
+  }
 \cs_new:Nn \__argdown_end_theorem: { \end{argdown@rgument} }
-\cs_new:Nn \__argdown_begin_singleton: { \item [] \begin{argdownst@tement} }
+\cs_new:Nn \__argdown_begin_singleton: { \begin{argdownst@tement} }
 \cs_new:Nn \__argdown_end_singleton:  { \end{argdownst@tement} }
 \cs_new:Nn \__argdown_inference_rule: 
   { 
